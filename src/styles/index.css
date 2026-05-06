@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+@theme {
+    --color-default: rgb(147, 153, 163);
+    --color-default-hover: rgb(132, 138, 148);
+    --color-default-strong: rgb(122, 132, 143);
+
+    --color-green: rgb(32, 173, 164);
+    --color-green-hover: rgb(22, 150, 140);
+    --color-green-strong: rgb(13, 126, 109);
+
+    --color-red: rgb(204, 51, 51);
+    --color-red-hover: rgb(189, 44, 44);
+    --color-red-strong: rgb(174, 37, 37);
+
+    --color-blue: rgb(38, 139, 216);
+    --color-green-blue: rgb(31, 105, 161);
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@utility animate-fade-in {
+  animation: fade-in 0.15s ease-out;
+}
+
+body, html {
+  background-color: rgb(236, 236, 236);
+  min-height: 100vh;
+  min-width: 100vw;
+}
