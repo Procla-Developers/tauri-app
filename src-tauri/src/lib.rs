@@ -23,31 +23,6 @@ fn api_key() -> &'static str {
     API_KEY_VAL.get_or_init(|| std::env::var("API_KEY").unwrap_or_default())
 }
 
-#[derive(Serialize, Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct Book {
-    pub id: i64,
-    pub barcode: String,
-    pub title: String,
-    pub authors: Vec<String>,
-    pub thumbnail_link: String,
-    pub genre: Genre,
-    pub stock: Stock,
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct Stock {
-    pub total: i64,
-    pub loaned_count: i64,
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-pub struct Genre {
-    pub id: i64,
-    pub name: String,
-}
-
 #[derive(Serialize, Deserialize)]
 pub struct Loan {
     pub id: i64,
@@ -110,31 +85,6 @@ async fn verify_user(qr_id: String) -> Result<UserInfo, String> {
 }
 
 #[tauri::command]
-async fn get_books(genre_id: Option<i64>) -> Result<Vec<Book>, String> {
-    let url = match genre_id {
-        Some(id) => format!("{}/books?genreId={}", api_base(), id),
-        None => format!("{}/books", api_base()),
-    };
-    let res: serde_json::Value = client()
-        .get(&url)
-        .send().await.map_err(|e| e.to_string())?
-        .json().await.map_err(|e| e.to_string())?;
-    let books: Vec<Book> = serde_json::from_value(res["books"].clone()).map_err(|e| e.to_string())?;
-    Ok(books)
-}
-
-#[tauri::command]
-async fn get_genres() -> Result<Vec<Genre>, String> {
-    let url = format!("{}/genres", api_base());
-    let res: serde_json::Value = client()
-        .get(&url)
-        .send().await.map_err(|e| e.to_string())?
-        .json().await.map_err(|e| e.to_string())?;
-    let genres: Vec<Genre> = serde_json::from_value(res["genres"].clone()).map_err(|e| e.to_string())?;
-    Ok(genres)
-}
-
-#[tauri::command]
 async fn borrow_book(qr_id: String, barcode: String, loan_period_days: Option<i64>) -> Result<Loan, String> {
     let url = format!("{}/internal/loans/borrow", api_base());
     let body = BorrowRequest { qr_id, barcode, loan_period_days };
@@ -182,8 +132,6 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             verify_user,
-            get_books,
-            get_genres,
             borrow_book,
             return_book,
         ])
