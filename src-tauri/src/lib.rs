@@ -1,11 +1,12 @@
 use serde::{Deserialize, Serialize};
 use reqwest::Client;
 use std::sync::OnceLock;
+use std::sync::RwLock;
 
 static HTTP_CLIENT: OnceLock<Client> = OnceLock::new();
 static API_BASE: OnceLock<String> = OnceLock::new();
 static CORE_API_BASE: OnceLock<String> = OnceLock::new();
-static API_KEY_VAL: OnceLock<String> = OnceLock::new();
+static API_KEY_VAL: RwLock<String> = RwLock::new(String::new());
 
 fn client() -> &'static Client {
     HTTP_CLIENT.get_or_init(Client::new)
@@ -19,8 +20,18 @@ fn core_api_base() -> &'static str {
     CORE_API_BASE.get_or_init(|| std::env::var("CORE_API_BASE_URL").unwrap_or_else(|_| "http://localhost/api/core".to_string()))
 }
 
-fn api_key() -> &'static str {
-    API_KEY_VAL.get_or_init(|| std::env::var("API_KEY").unwrap_or_default())
+fn api_key() -> String {
+    API_KEY_VAL.read().unwrap().clone()
+}
+
+#[tauri::command]
+fn set_api_key(key: String) {
+    *API_KEY_VAL.write().unwrap() = key;
+}
+
+#[tauri::command]
+fn get_api_key() -> String {
+    api_key()
 }
 
 #[derive(Serialize, Deserialize)]
@@ -191,7 +202,10 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_store::Builder::default().build())
         .invoke_handler(tauri::generate_handler![
+            set_api_key,
+            get_api_key,
             verify_user,
             borrow_book,
             return_book,

@@ -14,6 +14,8 @@ export type Genre = { id: number; name: string }
 export type CreatedBook = { id: number; title: string; barcode: string }
 
 export const api = {
+  setApiKey: (key: string) => invoke('set_api_key', { key }),
+  getApiKey: () => invoke<string>('get_api_key'),
   verifyUser: (qrId: string) => invoke<UserInfo>('verify_user', { qrId }),
   borrowBook: (qrId: string, barcode: string, loanPeriodDays?: number) =>
     invoke<Loan>('borrow_book', { qrId, barcode, loanPeriodDays: loanPeriodDays ?? null }),
