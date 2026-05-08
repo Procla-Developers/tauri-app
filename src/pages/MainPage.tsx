@@ -151,7 +151,7 @@ export default function MainPage() {
   if (page === 'books') {
     return (
       <div className="h-screen flex flex-col bg-[rgb(236,236,236)]">
-        <iframe src="http://localhost/book?embed" className="flex-1 w-full border-none" />
+        <iframe src="https://procla.dev/book?embed" className="flex-1 w-full border-none" />
         <button onClick={goHome} className="fixed bottom-8 left-1/2 -translate-x-1/2 px-6 py-3 text-sm font-bold text-gray-600 bg-white border border-gray-300 rounded-lg shadow-lg hover:bg-gray-50 transition-colors">
           ← ホームに戻る
         </button>
