@@ -10,6 +10,8 @@ export type Loan = {
 }
 
 export type UserInfo = { id: string }
+export type Genre = { id: number; name: string }
+export type CreatedBook = { id: number; title: string; barcode: string }
 
 export const api = {
   verifyUser: (qrId: string) => invoke<UserInfo>('verify_user', { qrId }),
@@ -17,4 +19,7 @@ export const api = {
     invoke<Loan>('borrow_book', { qrId, barcode, loanPeriodDays: loanPeriodDays ?? null }),
   returnBook: (qrId: string, barcode: string) =>
     invoke<Loan>('return_book', { qrId, barcode }),
+  getGenres: () => invoke<Genre[]>('get_genres'),
+  addBook: (barcode: string, title: string, authors: string[], genreId: number, total: number, thumbnailPath?: string) =>
+    invoke<CreatedBook>('add_book', { barcode, title, authors, genreId, total: total, thumbnailPath: thumbnailPath ?? null }),
 }

@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { api, type Loan, type UserInfo } from '../lib/api'
+import AddBookPage from './AddBookPage'
 
-type Page = 'home' | 'borrow' | 'return' | 'books'
+type Page = 'home' | 'borrow' | 'return' | 'books' | 'add_book'
 type Step = 'scan_user' | 'scan_book' | 'result'
 
 export default function MainPage() {
@@ -119,7 +120,7 @@ export default function MainPage() {
   // ホーム画面
   if (page === 'home') {
     return (
-      <div className="h-screen flex items-center justify-center bg-[rgb(236,236,236)]">
+      <div className="h-screen flex flex-col items-center justify-center bg-[rgb(236,236,236)]">
         <div className="flex gap-6">
           <button
             onClick={() => setPage('borrow')}
@@ -143,8 +144,19 @@ export default function MainPage() {
             <span className="text-xl font-bold">本一覧</span>
           </button>
         </div>
+        <button
+          onClick={() => setPage('add_book')}
+          className="fixed bottom-6 right-6 text-xs text-gray-400 hover:text-gray-600 transition-colors"
+        >
+          + 本を追加
+        </button>
       </div>
     )
+  }
+
+  // 本を追加
+  if (page === 'add_book') {
+    return <AddBookPage onBack={goHome} />
   }
 
   // 本一覧画面 - Web版をそのまま表示

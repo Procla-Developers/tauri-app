@@ -66,6 +66,67 @@ pub struct UserInfo {
     pub id: String,
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct Genre {
+    pub id: i64,
+    pub name: String,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreatedBook {
+    pub id: i64,
+    pub title: String,
+    pub barcode: String,
+}
+
+#[tauri::command]
+async fn get_genres() -> Result<Vec<Genre>, String> {
+    let url = format!("{}/genres", api_base());
+    let res: serde_json::Value = client()
+        .get(&url)
+        .send().await.map_err(|e| e.to_string())?
+        .json().await.map_err(|e| e.to_string())?;
+    serde_json::from_value(res["genres"].clone()).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn add_book(barcode: String, title: String, authors: Vec<String>, genre_id: i64, total: i64, thumbnail_path: Option<String>) -> Result<CreatedBook, String> {
+    let url = format!("{}/internal/books", api_base());
+    let mut form = reqwest::multipart::Form::new()
+        .text("barcode", barcode)
+        .text("title", title)
+        .text("authors", serde_json::to_string(&authors).unwrap())
+        .text("genreId", genre_id.to_string())
+        .text("total", total.to_string());
+
+    if let Some(path) = thumbnail_path {
+        let bytes = tokio::fs::read(&path).await.map_err(|e| e.to_string())?;
+        let filename = std::path::Path::new(&path)
+            .file_name()
+            .unwrap_or_default()
+            .to_string_lossy()
+            .to_string();
+        let part = reqwest::multipart::Part::bytes(bytes).file_name(filename).mime_str("image/jpeg").map_err(|e| e.to_string())?;
+        form = form.part("thumbnail", part);
+    }
+
+    let res = client()
+        .post(&url)
+        .header("X-API-Key", api_key())
+        .multipart(form)
+        .send().await.map_err(|e| e.to_string())?;
+    if !res.status().is_success() {
+        let text = res.text().await.unwrap_or_default();
+        let msg = serde_json::from_str::<serde_json::Value>(&text)
+            .ok()
+            .and_then(|v| v["error"].as_str().map(String::from))
+            .unwrap_or_else(|| "本の登録に失敗しました".to_string());
+        return Err(msg);
+    }
+    res.json::<CreatedBook>().await.map_err(|e| e.to_string())
+}
+
 #[tauri::command]
 async fn verify_user(qr_id: String) -> Result<UserInfo, String> {
     let url = format!("{}/internal/users/qid/{}", core_api_base(), qr_id);
@@ -134,6 +195,8 @@ pub fn run() {
             verify_user,
             borrow_book,
             return_book,
+            get_genres,
+            add_book,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
