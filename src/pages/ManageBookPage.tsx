@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { api, type Book, type Genre } from '../lib/api'
 import { open } from '@tauri-apps/plugin-dialog'
 import { convertFileSrc } from '@tauri-apps/api/core'
+import CameraCapture from '../components/CameraCapture'
 
 interface Props {
   onBack: () => void
@@ -23,6 +24,7 @@ export default function ManageBookPage({ onBack, adminPassword }: Props) {
   const [genres, setGenres] = useState<Genre[]>([])
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<{ success?: string; error?: string } | null>(null)
+  const [showCamera, setShowCamera] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -203,7 +205,14 @@ export default function ManageBookPage({ onBack, adminPassword }: Props) {
                 }}
                 className="w-full mt-2 px-2 py-1.5 text-xs border border-gray-300 rounded hover:bg-gray-50"
               >
-                画像を選択
+                ファイル選択
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowCamera(true)}
+                className="w-full mt-1 px-2 py-1.5 text-xs border border-gray-300 rounded hover:bg-gray-50"
+              >
+                カメラで撮影
               </button>
             </div>
 
@@ -307,6 +316,13 @@ export default function ManageBookPage({ onBack, adminPassword }: Props) {
       </button>
 
       <input ref={inputRef} onKeyDown={handleKeyDown} onBlur={focusInput} className="opacity-0 absolute -z-10" autoFocus />
+
+      {showCamera && (
+        <CameraCapture
+          onCapture={(path) => { setThumbnailPath(path); setShowCamera(false) }}
+          onCancel={() => setShowCamera(false)}
+        />
+      )}
     </div>
   )
 }

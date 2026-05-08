@@ -146,6 +146,28 @@ async fn fetch_book_info_by_isbn(isbn: String) -> Result<Option<GoogleBookInfo>,
 }
 
 #[tauri::command]
+async fn save_temp_image(bytes: Vec<u8>) -> Result<String, String> {
+    let dir = std::env::temp_dir().join("procla-id-tauri");
+    tokio::fs::create_dir_all(&dir).await.map_err(|e| e.to_string())?;
+    let filename = format!("capture_{}.jpg", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis());
+    let path = dir.join(&filename);
+    tokio::fs::write(&path, &bytes).await.map_err(|e| e.to_string())?;
+    Ok(path.to_string_lossy().to_string())
+}
+
+#[tauri::command]
+async fn save_temp_image_base64(base64_data: String) -> Result<String, String> {
+    use base64::Engine;
+    let bytes = base64::engine::general_purpose::STANDARD.decode(&base64_data).map_err(|e| e.to_string())?;
+    let dir = std::env::temp_dir().join("procla-id-tauri");
+    tokio::fs::create_dir_all(&dir).await.map_err(|e| e.to_string())?;
+    let filename = format!("capture_{}.jpg", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis());
+    let path = dir.join(&filename);
+    tokio::fs::write(&path, &bytes).await.map_err(|e| e.to_string())?;
+    Ok(path.to_string_lossy().to_string())
+}
+
+#[tauri::command]
 async fn verify_admin_password(admin_password: String) -> Result<bool, String> {
     let url = format!("{}/internal/auth/verify", api_base());
     let res = client()
@@ -351,6 +373,8 @@ pub fn run() {
             update_book,
             delete_book,
             verify_admin_password,
+            save_temp_image,
+            save_temp_image_base64,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
