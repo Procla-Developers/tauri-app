@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { api, type Loan, type UserInfo } from '../lib/api'
-import AddBookPage from './AddBookPage'
+import ManageBookPage from './ManageBookPage'
 
-type Page = 'home' | 'borrow' | 'return' | 'books' | 'add_book'
+type Page = 'home' | 'borrow' | 'return' | 'books' | 'manage_book'
 type Step = 'scan_user' | 'scan_book' | 'result'
 
-export default function MainPage() {
-  const [page, setPage] = useState<Page>('home')
+export default function MainPage({ onOpenSettings, onOpenManageBook, adminPassword }: { onOpenSettings: () => void; onOpenManageBook: () => void; adminPassword?: string }) {
+  const [page, setPage] = useState<Page>(adminPassword ? 'manage_book' : 'home')
   const [step, setStep] = useState<Step>('scan_user')
   const [qrId, setQrId] = useState('')
   const [user, setUser] = useState<UserInfo | null>(null)
@@ -145,18 +145,24 @@ export default function MainPage() {
           </button>
         </div>
         <button
-          onClick={() => setPage('add_book')}
+          onClick={onOpenManageBook}
           className="fixed bottom-6 right-6 text-xs text-gray-400 hover:text-gray-600 transition-colors"
         >
-          + 本を追加
+          + 本を管理
+        </button>
+        <button
+          onClick={onOpenSettings}
+          className="fixed bottom-6 left-6 text-xs text-gray-400 hover:text-gray-600 transition-colors"
+        >
+          設定
         </button>
       </div>
     )
   }
 
-  // 本を追加
-  if (page === 'add_book') {
-    return <AddBookPage onBack={goHome} />
+  // 本を管理
+  if (page === 'manage_book') {
+    return <ManageBookPage onBack={goHome} adminPassword={adminPassword ?? ''} />
   }
 
   // 本一覧画面 - Web版をそのまま表示
